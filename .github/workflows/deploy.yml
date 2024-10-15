@@ -26,17 +26,6 @@ jobs:
         run: |
           docker build -t ${{ matrix.app }} ./${{ matrix.app }}
 
-      - name: Create build directory
-        run: |
-          mkdir -p ./${{ matrix.app }}/build
-          docker create --name temp-container ${{ matrix.app }}
-          docker cp temp-container:/app/build ./${{ matrix.app }}/build
-          docker rm temp-container
-
-      - name: Check build directory
-        run: |
-          ls -la ./${{ matrix.app }}/build
-
       - name: Sync built app to S3 for ${{ matrix.app }}
         run: |
           aws s3 sync ./${{ matrix.app }}/build s3://your-s3-bucket-${{ matrix.app }}/ --delete
@@ -45,7 +34,6 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: 'ap-south-1'
 
-      - name: Stop and remove Docker container
+      - name: Stop Docker container
         run: |
-          docker stop ${{ matrix.app }} || true
-          docker rm ${{ matrix.app }} || true
+          docker stop ${{ matrix.app }} || true && docker rm ${{ matrix.app }} || true
