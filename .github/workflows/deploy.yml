@@ -1,0 +1,43 @@
+name: Deploy React Apps to S3
+
+on:
+  push:
+    branches:
+      - main  
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        app: [testingonemore, testingsecond]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Build Docker image for ${{ matrix.app }}
+        run: |
+          docker build -t ${{ matrix.app }} ./${{ matrix.app }}
+
+      - name: Run Docker container for ${{ matrix.app }}
+        run: |
+          docker run -d --name ${{ matrix.app }} ${{ matrix.app }}
+
+      - name: Sync built app to S3 for ${{ matrix.app }}
+        run: |
+          aws s3 sync ./${{ matrix.app }}/build s3://your-s3-bucket-${{ matrix.app }}/ --delete
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: 'ap-south-1'
+
+      - name: Stop Docker container
+        run: |
+          docker stop ${{ matrix.app }} && docker rm ${{ matrix.app }}
