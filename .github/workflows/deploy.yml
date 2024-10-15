@@ -22,9 +22,20 @@ jobs:
         with:
           node-version: '16'
 
-      - name: Build Docker image for ${{ matrix.app }}
+      - name: Install dependencies
         run: |
-          docker build -t ${{ matrix.app }} ./${{ matrix.app }}
+          cd ./${{ matrix.app }}
+          npm install
+
+      - name: Build the application
+        run: |
+          cd ./${{ matrix.app }}
+          npm run build
+
+      - name: List files in build directory
+        run: |
+          cd ./${{ matrix.app }}
+          ls -R build
 
       - name: Sync built app to S3 for ${{ matrix.app }}
         run: |
@@ -33,7 +44,3 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: 'ap-south-1'
-
-      - name: Stop Docker container
-        run: |
-          docker stop ${{ matrix.app }} || true && docker rm ${{ matrix.app }} || true
