@@ -11,7 +11,7 @@ jobs:
 
     strategy:
       matrix:
-        app: [testingonemore, testingsecond]
+        app: [testingreact, testsecond]
 
     steps:
       - name: Checkout repository
